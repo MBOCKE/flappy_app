@@ -18,6 +18,20 @@ app.get('/', (req, res) => {
   res.json({ message: 'Flappy backend running' });
 });
 
+const corsOptions = {
+  origin: 'https://flappy-frontend.onrender.com', // Update with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With', 
+    'Content-Type',
+    'Accept',
+    'Authorization'
+  ],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 // Mount routes
 app.use('/api', authRoutes);         // /api/register, /api/login, /api/me
 app.use('/api', scoreRoutes);        // /api/score
