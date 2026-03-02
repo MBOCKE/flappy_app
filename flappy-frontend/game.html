@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Game</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar">
+      <h2>Player</h2>
+      <p><strong>Username:</strong> <span id="user-name">-</span></p>
+      <p><strong>Best score:</strong> <span id="best-score">0</span></p>
+      <button id="logout-btn" class="btn-danger">Logout</button>
+
+      <h2 style="margin-top: 20px;">Leaderboard</h2>
+      <button id="refresh-leaderboard-btn" class="btn-secondary">Refresh</button>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>User</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="main">
+      <canvas id="gameCanvas" width="400" height="500"></canvas>
+      <div id="status-text"></div>
+      <div id="game-over-buttons" style="display: none; margin-top: 20px;">
+        <button id="restart-btn" class="btn-primary">Restart Game</button>
+        <button id="view-leaderboard-btn" class="btn-secondary">View Leaderboard</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/api.js"></script>
+  <script src="assets/game.js"></script>
+  <script>
+    // Redirect if no token
+    if (!getToken()) {
+      window.location.href = 'login.html';
+    }
+
+    const userNameEl = document.getElementById('user-name');
+    const bestScoreEl = document.getElementById('best-score');
+    const statusText = document.getElementById('status-text');
+    const leaderboardBody = document.getElementById('leaderboard-body');
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      clearAuth();
+      window.location.href = 'login.html';
+    });
+
+    document
+      .getElementById('refresh-leaderboard-btn')
+      .addEventListener('click', loadLeaderboard);
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      document.getElementById('game-over-buttons').style.display = 'none';
+      window.restartGame();
+    });
+
+    document.getElementById('view-leaderboard-btn').addEventListener('click', loadLeaderboard);
+
+    async function loadUser() {
+      try {
+        const data = await apiMe();
+        userNameEl.textContent = data.username;
+        bestScoreEl.textContent = data.best_score;
+      } catch (err) {
+        console.error(err);
+        statusText.textContent = 'Unable to load user info. Please login again.';
+        setTimeout(() => {
+          clearAuth();
+          window.location.href = 'login.html';
+        }, 1500);
+      }
+    }
+
+    async function loadLeaderboard() {
+      leaderboardBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+      try {
+        const data = await apiLeaderboard();
+        leaderboardBody.innerHTML = '';
+        if (!Array.isArray(data) || data.length === 0) {
+          leaderboardBody.innerHTML =
+            '<tr><td colspan="3">No scores yet</td></tr>';
+          return;
+        }
+        data.forEach((row, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${row.username}</td>
+            <td>${row.best_score}</td>
+          `;
+          leaderboardBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        leaderboardBody.innerHTML =
+          '<tr><td colspan="3">Error loading leaderboard</td></tr>';
+      }
+    }
+
+    // Make loadLeaderboard available for game.js after submitScore
+    window.loadLeaderboard = loadLeaderboard;
+
+    // Init page
+    loadUser();
+    loadLeaderboard();
+    startFlappyGame();
+  </script>
+</body>
+</html>

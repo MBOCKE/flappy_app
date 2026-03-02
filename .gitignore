@@ -1,0 +1,11 @@
+# Node dependencies
+node_modules/
+flappy-backend/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# Env files (secrets)
+.env
+flappy-backend/.env
