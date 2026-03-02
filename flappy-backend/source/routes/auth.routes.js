@@ -57,7 +57,7 @@ router.post('/register', async (req, res) => {
 });
 
 //POST /api/login
-router.post('/login', loginlimiter, async (req, res) => {
+router.post('/login', /* loginlimiter, */ async (req, res) => {
     try {
         const {username, password} = req.body;
 
