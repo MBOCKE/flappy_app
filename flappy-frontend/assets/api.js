@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:4000';
+const API_URL = 'https://flappy-app.onrender.com';
 
 function getToken() {
   return localStorage.getItem('token');
