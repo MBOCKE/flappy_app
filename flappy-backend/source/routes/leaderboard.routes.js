@@ -13,7 +13,7 @@ router.get('/leaderboard', async (req, res) => {
             ORDER BY best_score DESC, created_at ASC
             LIMIT 50`);
 
-        res.json(rgows);
+        res.json(rows);
     } catch (err) {
         console.error('/api/leaderboard error:', err);
         res.status(500).json({message: 'Internal server error'});
