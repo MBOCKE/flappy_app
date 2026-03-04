@@ -66,32 +66,34 @@ router.post('/login', /* loginlimiter, */ async (req, res) => {
         }
 
         const[rows] = await pool.query(
-            'SELECT id, username, password_hash FROM users WHERE username = ?',
-            [username]
+            'SELECT id, username, password_hash FROM users WHERE username = ? and password_hash = ?',
+            [username, password ]
         );
 
         if (rows.length === 0) {
             return res.status(401).json({message: 'Invalid credentials'});
+        }else{
+            return res.status(200).json({success: true, message: 'login good', user:rows[0] })
         }
 
         const user = rows [0];
 
-        const match = await bcrypt.compare(password, user.password_hash);
-        if (!match) {
-            return res.status(401).json({message: 'Invalid credentials'});
-        }
+        // const match = await bcrypt.compare(password, user.password_hash);
+        // if (!match) {
+        //     return res.status(401).json({message: 'Invalid credentials'});
+        // }
 
-        const token = generateToken(user);
+        // const token = generateToken(user);
 
-        res.json({
-            mesaage: 'Login successful',
-            user: {
-                id: user.id,
-                username: user.username,  
-                best_score: user.best_score
-            },
-            token
-        });
+        // res.status(200).json({
+        //     message: 'Login successful',
+        //     user: {
+        //         id: user.id,
+        //         username: user.username,  
+        //         best_score: user.best_score
+        //     },
+        //     token
+        // });
     } catch (err) {
         console.error('Error during login:', err);
         res.status(500).json({message: 'Internal server error'});
