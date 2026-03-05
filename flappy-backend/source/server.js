@@ -19,7 +19,21 @@ app.get('/', (req, res) => {
 });
 
 const corsOptions = {
-  origin: 'https://flappy-frontend.onrender.com', // Update with your frontend URL
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    // Also allow localhost and live server for development
+    const allowedOrigins = [
+      'https://flappy-frontend.onrender.com',
+      'http://localhost:3000',
+      'http://localhost:5500',
+      'http://127.0.0.1:5500',
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: [
     'Origin',
