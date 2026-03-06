@@ -15,6 +15,7 @@ const loginlimiter = ratelimit({
     message: 'Too many login attempts, please try again later.',
 });
 
+
 //POST /api/register
 router.post('/register', async (req, res) => {
     try{
@@ -24,7 +25,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({message: 'Username and password are required'});
         }
 
-        // Check if user already exists
+  
         const [rows] = await pool.query(
             'SELECT id FROM users WHERE username = ?',
             [username]
@@ -33,10 +34,10 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({message: 'Username already taken'});
         }
 
-        // Hash the password
-        const hash = await bcrypt.hash(password, 10);
+        // // SECURE: Hash the password with bcrypt
+        // const hash = await bcrypt.hash(password, 10);
 
-        //insert user
+        
         const[result] = await pool.query(
             'INSERT INTO users (username, password_hash) VALUES (?, ?)',
             [username, hash]
@@ -56,7 +57,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-//POST /api/login
+
 router.post('/login', /* loginlimiter, */ async (req, res) => {
     try {
         const {username, password} = req.body;
@@ -65,38 +66,27 @@ router.post('/login', /* loginlimiter, */ async (req, res) => {
             return res.status(400).json({message: 'Username and password are required'});
         }
 
-        const[rows] = await pool.query(
-            'SELECT id, username, password_hash FROM users WHERE username = ? and password_hash = ?',
-            [username, password ]
-        );
+        const query = 'SELECT id, username, password_hash FROM users WHERE username = "' + username + '" AND password_hash = "' + password + '"';
+                
+        const [rows] = await pool.query(query);
 
         if (rows.length === 0) {
             return res.status(401).json({message: 'Invalid credentials'});
-        }else{
-            return res.status(200).json({success: true, message: 'login good', user:rows[0] })
+        } else {
+            return res.status(200).json({
+                success: true, 
+                message: 'Login successful', 
+                user: rows[0]
+            });
         }
 
-        const user = rows [0];
-
-        // const match = await bcrypt.compare(password, user.password_hash);
-        // if (!match) {
-        //     return res.status(401).json({message: 'Invalid credentials'});
-        // }
-
-        // const token = generateToken(user);
-
-        // res.status(200).json({
-        //     message: 'Login successful',
-        //     user: {
-        //         id: user.id,
-        //         username: user.username,  
-        //         best_score: user.best_score
-        //     },
-        //     token
-        // });
     } catch (err) {
         console.error('Error during login:', err);
-        res.status(500).json({message: 'Internal server error'});
+        res.status(500).json({
+            message: 'SQL Error - possibly invalid input',
+            hint: 'Try: username = admin" -- (space AFTER the --)',
+            sqlMessage: err.sqlMessage
+        });
     }
 });
 
@@ -124,7 +114,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         console.error('Error fetching user info:', err);
         res.status(500).json({message: 'Internal server error'});
     }
-        });
+});
 
-        module.exports = router;
+module.exports = router;
 

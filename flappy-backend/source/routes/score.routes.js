@@ -4,43 +4,29 @@ const { authMiddleware } = require('../auth');
 
 const router = express.Router();
 
-// POST /api/score
-router.post('/score', authMiddleware, async (req, res) => {
+// POST /api/score - Record a new score for the authenticated user
+router.post('/score', async (req, res) => {
   try {
-    const { score } = req.body;
-    const userId = req.user.id;
+    const { user_id, score } = req.body;
 
-    const numericScore = Number(score);
-    if (!Number.isFinite(numericScore) || numericScore < 0) {
-      return res.status(400).json({ message: 'Invalid score' });
+    if (!user_id || score === undefined) {
+      return res.status(400).json({ message: 'user_id and score are required' });
     }
 
-    // Optional: record history (ensure table name is 'scores')
-    await pool.query(
-      'INSERT INTO scores (user_id, score) VALUES (?, ?)',
-      [userId, numericScore]
-    );
-
-    // Update best_score if this score is higher
-    await pool.query(
-      'UPDATE users SET best_score = GREATEST(best_score, ?) WHERE id = ?',
-      [numericScore, userId]
-    );
-
-    // Read updated best_score
-    const [rows] = await pool.query(
-      'SELECT best_score FROM users WHERE id = ?',
-      [userId]
-    );
+   
+    const query = 'UPDATE users SET best_score = ' + score + ' WHERE id = ' + user_id;
+    
+    await pool.query(query);
 
     res.json({
-      message: 'Score recorded',
-      best_score: rows[0].best_score,
+      message: 'Score updated successfully',
+      score: score,
     });
   } catch (err) {
-    console.error('/api/score error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('/api/score-vuln error:', err);
+    res.status(500).json({ message: 'SQL Error', sqlMessage: err.sqlMessage });
   }
 });
+
 
 module.exports = router;
